@@ -35,7 +35,7 @@ endif::blogpost[]
 == Usage
 The script command syntax is:
 
-  python w3c-validator.py [--verbose] FILE|URL...
+  ./w3c-validator.py [--verbose] FILE|URL...
 
 - The optional `--verbose` option will print information about what is
   going on internally.
