@@ -76,4 +76,3 @@ validating: http://www.methods.co.nz/asciidoc/layout1.css ...
 - Curl (the `curl(1)` command must be in the shell 'PATH').
 - An Internet connection.
 
-Written and tested on Xubuntu 10.04 with Python 2.6.5, should work on other Python platforms.
