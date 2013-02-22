@@ -72,7 +72,7 @@ validating: http://www.methods.co.nz/asciidoc/layout1.css ...
 
 
 == Prerequisites
-- Python.
-- Curl (the `curl(1)` command must be in the shell 'PATH').
+- Python 2
+- Curl
 - An Internet connection.
 
