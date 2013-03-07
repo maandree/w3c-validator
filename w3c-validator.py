@@ -98,7 +98,9 @@ if __name__ == '__main__':
                 message('warnings: %d' % warningcount)
         else:
             for msg in result['messages']:
-                if 'lastLine' in msg:
+                if 'lastLine' in msg and 'lastColumn' in msg:
+                    message('%(type)s: line %(lastLine)d: column %(lastColumn)d: %(message)s' % msg)
+                elif 'lastLine' in msg:
                     message('%(type)s: line %(lastLine)d: %(message)s' % msg)
                 else:
                     message('%(type)s: %(message)s' % msg)
