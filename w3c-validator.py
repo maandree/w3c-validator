@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 '''
-w3c-validator - Validate HTML and CSS files using the WC3 validators
+w3c-validator - Validate files using the WC3 validators
 
 Copyright: Stuart Rackham (c) 2011
 License:   MIT
@@ -16,6 +16,7 @@ import urllib
 
 html_validator_url = 'http://validator.w3.org/check'
 css_validator_url = 'http://jigsaw.w3.org/css-validator/validator'
+unicorn_validator_url = 'http://validator.w3.org/unicorn/check'
 
 verbose_option = False
 
@@ -34,29 +35,41 @@ def validate(filename):
     Raise OSError if curl command returns an error status.
     '''
     quoted_filename = urllib.quote(filename)
+    ishtml = filename.endswith('.htm') or filename.endswith('.html')
+    ishtml = ishtml or filename.endswith('.xht') or filename.endswith('.xhtml')
     if filename.startswith('http://'):
         # Submit URI with GET.
         if filename.endswith('.css'):
             cmd = ('curl -sG -d uri=%s -d output=json -d warning=0 %s'
                     % (quoted_filename, css_validator_url))
-        else:
+        elif ishtml:
             cmd = ('curl -sG -d uri=%s -d output=json %s'
                     % (quoted_filename, html_validator_url))
+        else:
+            cmd = ('curl -sG -d ucn_uri=%s -d ucn_task=conformance -d ucn_format=text %s'
+                    % (quoted_filename, unicorn_validator_url))
     else:
         # Upload file as multipart/form-data with POST.
         if filename.endswith('.css'):
             cmd = ('curl -sF "file=@%s;type=text/css" -F output=json -F warning=0 %s'
                     % (quoted_filename, css_validator_url))
-        else:
+        elif ishtml:
             cmd = ('curl -sF "uploaded_file=@%s;type=text/html" -F output=json %s'
                     % (quoted_filename, html_validator_url))
+        else:
+            cmd = ('curl -sF "ucn_file=@%s" -F ucn_task=conformance -F ucn_format=text %s'
+                    % (quoted_filename, unicorn_validator_url))
     verbose(cmd)
     status,output = commands.getstatusoutput(cmd)
     if status != 0:
         raise OSError (status, 'failed: %s' % cmd)
-    verbose(output)
+    if filename.endswith('.css') or ishtml:
+        verbose(output)
     try:
-        result = json.loads(output)
+        if filename.endswith('.css'):# or ishtml:
+            result = json.loads(output)
+        else:
+            result = output
     except ValueError:
         result = ''
     time.sleep(2)   # Be nice and don't hog the free validator service.
@@ -96,6 +109,16 @@ if __name__ == '__main__':
                 message('errors: %d' % errorcount)
             if warningcount > 0:
                 message('warnings: %d' % warningcount)
+        elif isinstance(result, str):
+            print >> sys.stderr, result
+            passed = False
+            notpassed = False
+            for line in result.split('\n'):
+                if line.startswith('This document has passed the test:'):
+                    passed = True
+                elif line.startswith('This document has not passed the test:'):
+                    notpassed = True
+            errors = 1 if notpassed and not passed else 0
         else:
             for msg in result['messages']:
                 if 'lastLine' in msg and 'lastColumn' in msg:
